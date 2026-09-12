@@ -81,7 +81,10 @@ def create_app():
     @app.route("/login")
     def login():
         try:
-            redirect_url = "http://localhost:8000/auth/callback"
+            redirect_url = os.getenv(
+            "OAUTH_REDIRECT_URL",
+            "http://localhost:8000/auth/callback"
+)
 
             r = supabase.auth.sign_in_with_oauth({
                 "provider": "google",
