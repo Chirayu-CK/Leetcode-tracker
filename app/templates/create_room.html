@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create or Join a Room · LeetCode Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            color-scheme: dark;
+            --bg: #0b100f; --panel: #141d19; --surface: #17211c;
+            --text: #f5f7fa; --muted: #a2afa7; --green: #4ade80;
+            --border: rgba(255,255,255,.1); --tint: rgba(34,197,94,.08);
+        }
+        body.light {
+            color-scheme: light;
+            --bg: #f3f6f4; --panel: #fff; --surface: #edf4ef;
+            --text: #142019; --muted: #526058; --green: #15803d;
+            --border: rgba(15,23,42,.14); --tint: rgba(22,163,74,.07);
+        }
+        body { margin: 0; min-height: 100vh; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: var(--text); background: radial-gradient(ellipse at 50% 15%, var(--tint), transparent 65%), var(--bg); }
+        a { color: inherit; text-decoration: none; }
+        button, input { font: inherit; }
+        a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+        .container { width: calc(100% - 48px); max-width: 1200px; margin: 28px auto 40px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel); }
+        .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 750; letter-spacing: -.5px; }
+        .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; color: var(--green); background: var(--tint); border: 1px solid var(--border); border-radius: 12px; font: 700 18px monospace; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+        .nav-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 11px; font-size: 14px; cursor: pointer; }
+        .nav-button:hover { border-color: var(--green); }
+        .theme-toggle { width: 44px; padding: 0; font-size: 18px; }
+        main { max-width: 980px; margin: 0 auto; }
+        .intro { padding: 54px 0 32px; }
+        .eyebrow { margin: 0 0 14px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.7px; text-transform: uppercase; }
+        h1 { margin: 0 0 14px; font-size: clamp(32px, 4vw, 46px); line-height: 1.12; letter-spacing: -1.7px; }
+        .intro p:last-child { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+        .forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+        .card { min-width: 0; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 30px; }
+        .card.create { background: linear-gradient(145deg, var(--tint), transparent 65%), var(--panel); }
+        .icon { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--border); border-radius: 13px; background: var(--tint); color: var(--green); font-size: 25px; margin-bottom: 24px; }
+        h2 { margin: 0 0 10px; font-size: 24px; letter-spacing: -.6px; }
+        .description { margin: 0 0 28px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+        form { display: flex; flex-direction: column; margin-top: auto; }
+        label { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+        input { width: 100%; min-width: 0; min-height: 52px; padding: 14px 15px; border: 1px solid var(--border); border-radius: 11px; color: var(--text); background: var(--surface); font-size: 15px; }
+        input::placeholder { color: var(--muted); opacity: .85; }
+        .hint { margin: 10px 0 25px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+        .submit { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 50px; padding: 14px 17px; border-radius: 11px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 650; cursor: pointer; }
+        .submit.primary { background: #15803d; color: #fff; }
+        .submit:hover { border-color: var(--green); }
+        .submit.primary:hover { background: #166534; }
+        .note { display: flex; gap: 14px; align-items: flex-start; margin-top: 22px; padding: 19px 22px; border: 1px solid var(--border); border-radius: 14px; }
+        .note span { color: var(--green); font-size: 20px; }
+        .note p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+        .note strong { color: var(--text); font-weight: 600; }
+        footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 36px; line-height: 1.7; }
+        @media (max-width: 700px) {
+            .container { width: calc(100% - 24px); margin-top: 12px; }
+            .topbar { padding: 18px; flex-wrap: wrap; gap: 16px; }
+            .brand { font-size: 18px; }
+            .intro { padding-top: 34px; }
+            .forms { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+            .card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="topbar">
+            <a href="/profile" class="brand"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>LeetCode Tracker</a>
+            <nav class="actions" aria-label="Room page navigation">
+                <a href="/profile" class="nav-button">Dashboard</a>
+                <button id="theme-toggle" class="nav-button theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">☀️</button>
+            </nav>
+        </header>
+        <main>
+            <section class="intro" aria-labelledby="page-title">
+                <p class="eyebrow">Better together</p>
+                <h1 id="page-title">Find your coding circle.</h1>
+                <p>Start a room for your friends, or join the one they're already in.</p>
+            </section>
+            <div class="forms">
+                <section class="card create" aria-labelledby="create-title">
+                    <span class="icon" aria-hidden="true">+</span>
+                    <h2 id="create-title">Create a room</h2>
+                    <p class="description">Give your group a place to compare progress and keep each other motivated.</p>
+                    <form method="POST" action="/create-room">
+                        <label for="room-name">Room name</label>
+                        <input id="room-name" name="room_name" placeholder="e.g. The Daily Solvers" required aria-describedby="room-name-hint">
+                        <p id="room-name-hint" class="hint">Pick a name your friends will recognize.</p>
+                        <button class="submit primary" type="submit">Create Room <span aria-hidden="true">→</span></button>
+                    </form>
+                </section>
+                <section class="card" aria-labelledby="join-title">
+                    <span class="icon" aria-hidden="true">↗</span>
+                    <h2 id="join-title">Join your friends</h2>
+                    <p class="description">Already have an invite? Enter the room code and get in on the friendly competition.</p>
+                    <form method="POST" action="/join-room">
+                        <label for="join-code">Room code</label>
+                        <input id="join-code" name="join_code" placeholder="Enter your room code" required spellcheck="false" aria-describedby="join-code-hint">
+                        <p id="join-code-hint" class="hint">Ask a friend in the room for its join code.</p>
+                        <button class="submit" type="submit">Join Room <span aria-hidden="true">→</span></button>
+                    </form>
+                </section>
+            </div>
+            <aside class="note"><span aria-hidden="true">♜</span><p><strong>A little competition. A lot of progress.</strong><br>Compare contest ratings on your room's leaderboard and keep practicing together.</p></aside>
+        </main>
+        <footer>LeetCode Tracker · Small steps. Real progress.</footer>
+    </div>
+    <script>
+        const button = document.getElementById("theme-toggle");
+        button.addEventListener("click", function () {
+            const isLight = document.body.classList.toggle("light");
+            button.textContent = isLight ? "🌙" : "☀️";
+            button.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+            button.setAttribute("aria-pressed", String(isLight));
+        });
+    </script>
+</body>
+</html>

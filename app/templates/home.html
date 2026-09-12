@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Track your LeetCode progress, streaks and topics, and compare contest ratings with friends.">
+    <title>LeetCode Tracker · Make progress visible</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            color-scheme: dark;
+            --bg: #0b100f; --panel: #141d19; --surface: #17211c;
+            --text: #f5f7fa; --muted: #a2afa7; --green: #4ade80;
+            --border: rgba(255,255,255,.1); --tint: rgba(34,197,94,.08);
+            --heat-0: #1c2a21; --heat-1: #0e4429; --heat-2: #006d32; --heat-3: #26a641; --heat-4: #39d353;
+        }
+        body.light {
+            color-scheme: light;
+            --bg: #f3f6f4; --panel: #fff; --surface: #edf4ef;
+            --text: #142019; --muted: #526058; --green: #15803d;
+            --border: rgba(15,23,42,.12); --tint: rgba(22,163,74,.07);
+            --heat-0: #e3ebe5; --heat-1: #9be9a8; --heat-2: #40c463; --heat-3: #30a14e; --heat-4: #216e39;
+        }
+        body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 75% 25%, var(--tint), transparent 55%), var(--bg); color: var(--text); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+        a { text-decoration: none; }
+        a:focus-visible, button:focus-visible { outline: 3px solid var(--green); outline-offset: 5px; }
+        .container { width: calc(100% - 64px); max-width: 1320px; margin: 0 auto; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 26px 0; border-bottom: 1px solid var(--border); }
+        .brand { display: flex; align-items: center; gap: 12px; color: var(--text); font-weight: 750; font-size: 20px; letter-spacing: -.6px; }
+        .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 12px; color: var(--green); background: var(--tint); font: 700 18px monospace; }
+        .nav { display: flex; gap: 20px; align-items: center; }
+        .nav-link { color: var(--muted); font-size: 14px; padding: 12px 0; }
+        .nav-link:hover { color: var(--green); }
+        .theme-toggle { width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); cursor: pointer; font-size: 18px; }
+        .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: 64px; padding: 90px 0 80px; }
+        .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--green); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.7px; margin: 0 0 22px; }
+        .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+        h1 { font-size: clamp(42px, 5vw, 68px); line-height: 1.06; letter-spacing: -3px; margin: 0 0 24px; font-weight: 750; }
+        h1 span { color: var(--green); }
+        .lead { color: var(--muted); max-width: 440px; font-size: 17px; line-height: 1.8; margin: 0 0 30px; }
+        .login-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 16px 23px; min-height: 52px; border-radius: 12px; background: #15803d; color: #fff; font-size: 15px; font-weight: 650; box-shadow: 0 8px 26px var(--tint); }
+        .login-button:hover { background: #166534; }
+        .google-icon { display: grid; place-items: center; width: 25px; height: 25px; background: #fff; color: #4285f4; border-radius: 50%; font: 700 17px Arial, sans-serif; }
+        .login-note { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+        .preview { background: var(--panel); border: 1px solid var(--border); border-radius: 22px; padding: 25px; box-shadow: 0 24px 60px rgba(0,0,0,.12); min-width: 0; }
+        .preview-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 23px; }
+        .preview-header strong { font-size: 14px; }
+        .sample { color: var(--muted); font-size: 10px; border: 1px solid var(--border); padding: 5px 8px; border-radius: 6px; white-space: nowrap; }
+        .preview-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mini-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 17px; }
+        .mini-stat:first-child { background: var(--tint); }
+        .mini-stat p { margin: 0 0 10px; color: var(--muted); font-size: 11px; }
+        .mini-stat strong { display: block; font-size: 32px; letter-spacing: -1px; }
+        .mini-stat:first-child strong { color: var(--green); }
+        .mini-stat small { display: block; font-size: 10px; margin-top: 6px; color: var(--muted); }
+        .preview-label { font-size: 11px; color: var(--muted); margin: 22px 0 12px; }
+        .heatmap { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+        .heatmap span { aspect-ratio: 1; background: var(--heat-0); border-radius: 2px; }
+        .heatmap .l1 { background: var(--heat-1); }
+        .heatmap .l2 { background: var(--heat-2); }
+        .heatmap .l3 { background: var(--heat-3); }
+        .heatmap .l4 { background: var(--heat-4); }
+        .preview-bottom { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--muted); margin-top: 10px; }
+        .topics { display: flex; flex-wrap: wrap; gap: 7px; }
+        .topics span { padding: 6px 10px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 10px; }
+        .features { border-top: 1px solid var(--border); padding: 38px 0 50px; }
+        .section-heading { font-size: 22px; letter-spacing: -.6px; margin: 0 0 26px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+        .feature { border: 1px solid var(--border); background: var(--panel); border-radius: 16px; padding: 24px; }
+        .feature-icon { display: grid; place-items: center; width: 36px; height: 36px; background: var(--tint); color: var(--green); border-radius: 10px; font-size: 19px; margin-bottom: 20px; }
+        .feature h3 { margin: 0 0 10px; font-size: 16px; }
+        .feature p { margin: 0; font-size: 13px; line-height: 1.8; color: var(--muted); }
+        footer { border-top: 1px solid var(--border); padding: 22px 0; display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+        @media (max-width: 1000px) { .hero { gap: 32px; padding: 60px 0; } h1 { letter-spacing: -2px; } }
+        @media (max-width: 760px) {
+            .container { width: calc(100% - 32px); }
+            .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 48px 0; }
+            .hero-copy { max-width: 550px; }
+            .preview { max-width: 550px; width: 100%; }
+            .feature-grid { grid-template-columns: 1fr; gap: 12px; }
+            .nav { gap: 12px; }
+            .nav-link { display: none; }
+            .brand { font-size: 17px; }
+            .brand-mark { width: 36px; height: 36px; }
+            footer { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="topbar">
+            <a href="/" class="brand"><span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>LeetCode Tracker</a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="#features" class="nav-link">What you can track</a>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">☀️</button>
+            </nav>
+        </header>
+        <main>
+            <section class="hero" aria-labelledby="hero-title">
+                <div class="hero-copy">
+                    <p class="eyebrow">A little better, every day</p>
+                    <h1 id="hero-title">Put your progress<br><span>in perspective.</span></h1>
+                    <p class="lead">Track your LeetCode progress, streaks and topics. See how far you've come, and keep growing with friends.</p>
+                    <a href="/login" class="login-button"><span class="google-icon" aria-hidden="true">G</span>Login with Google<span aria-hidden="true">→</span></a>
+                    <p class="login-note">Your next chapter starts with one problem.</p>
+                </div>
+                <aside class="preview" aria-label="Illustrative dashboard preview with sample data">
+                    <div class="preview-header"><strong>Your progress, at a glance</strong><span class="sample">SAMPLE DATA</span></div>
+                    <div class="preview-stats">
+                        <div class="mini-stat"><p>Total solved</p><strong>256</strong><small>problems completed</small></div>
+                        <div class="mini-stat"><p>Current streak</p><strong>12 <span style="font-size:14px;font-weight:500">days</span></strong><small>one day at a time</small></div>
+                    </div>
+                    <p class="preview-label">Submission activity</p>
+                    <div id="sample-heatmap" class="heatmap" aria-hidden="true"></div>
+                    <div class="preview-bottom"><span>Every square tells a story.</span><span>Sample activity</span></div>
+                    <p class="preview-label">Topics explored</p>
+                    <div class="topics"><span>Arrays</span><span>Dynamic Programming</span><span>Graphs</span><span>Strings</span></div>
+                </aside>
+            </section>
+            <section id="features" class="features" aria-labelledby="features-title">
+                <h2 id="features-title" class="section-heading">More than a solved count.</h2>
+                <div class="feature-grid">
+                    <article class="feature"><span class="feature-icon" aria-hidden="true">▦</span><h3>Build your rhythm</h3><p>Follow your streaks and submission heatmap. See the practice that adds up over time.</p></article>
+                    <article class="feature"><span class="feature-icon" aria-hidden="true">↗</span><h3>Know your strengths</h3><p>Explore your solved problems by difficulty and topic, all in one clear dashboard.</p></article>
+                    <article class="feature"><span class="feature-icon" aria-hidden="true">♜</span><h3>Grow with friends</h3><p>Create or join a room and compare contest ratings. Make practice a shared habit.</p></article>
+                </div>
+            </section>
+        </main>
+        <footer><span>LeetCode Tracker · Small steps. Real progress.</span><span>An independent tracker. Not affiliated with LeetCode.</span></footer>
+    </div>
+    <script>
+        const button = document.getElementById("theme-toggle");
+        button.addEventListener("click", function () {
+            const isLight = document.body.classList.toggle("light");
+            button.textContent = isLight ? "🌙" : "☀️";
+            button.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+            button.setAttribute("aria-pressed", String(isLight));
+        });
+        // Decorative sample data only; no user activity is fetched on this page.
+        const heatmap = document.getElementById("sample-heatmap");
+        for (let i = 0; i < 140; i++) {
+            const cell = document.createElement("span");
+            cell.className = "l" + ((i * 7 + Math.floor(i / 7) * 3) % 5);
+            heatmap.appendChild(cell);
+        }
+    </script>
+</body>
+</html>

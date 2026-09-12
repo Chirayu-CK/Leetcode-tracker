@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Ranking · LeetCode Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            color-scheme: dark;
+            --bg: #0b100f;
+            --panel: #141d19;
+            --surface: #17211c;
+            --hover: #1c2922;
+            --text: #f5f7fa;
+            --muted: #9ca3af;
+            --border: rgba(255,255,255,.09);
+            --green: #4ade80;
+            --button: #15803d;
+            --tint: rgba(34,197,94,.08);
+        }
+        body.light {
+            color-scheme: light;
+            --bg: #f3f6f4;
+            --panel: #ffffff;
+            --surface: #f7faf8;
+            --hover: #edf5ef;
+            --text: #111827;
+            --muted: #4b5563;
+            --border: rgba(15,23,42,.1);
+            --green: #15803d;
+            --tint: rgba(22,163,74,.06);
+        }
+        body { margin: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: radial-gradient(ellipse at 10% 0%, var(--tint), transparent 55%), var(--bg); color: var(--text); min-height: 100vh; }
+        a, button { -webkit-tap-highlight-color: transparent; }
+        a:focus-visible, button:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+        .container { width: calc(100% - 64px); max-width: 1320px; margin: 28px auto 48px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 26px; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; border: 1px solid var(--border); background: var(--tint); color: var(--green); font: 700 19px monospace; }
+        .brand-name { font-size: 20px; font-weight: 750; letter-spacing: -.5px; }
+        .brand p { color: var(--muted); font-size: 13px; margin: 5px 0 0; }
+        .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .button { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); font: 600 14px inherit; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .button:hover { background: var(--hover); border-color: var(--green); }
+        .button.primary { background: var(--button); color: #fff; }
+        .theme-toggle { width: 44px; padding: 0; font-size: 18px; }
+        .header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 42px 2px 30px; }
+        .eyebrow { margin: 0 0 12px; color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+        h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.15; letter-spacing: -1.5px; margin: 0; }
+        .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 12px 0 0; }
+        .ranking-label { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 100px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+        .ranking-label span { color: var(--green); font-weight: 700; }
+        .ranking-card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: 0 8px 28px rgba(0,0,0,.08); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        caption { text-align: left; padding: 24px 26px; font-size: 18px; font-weight: 700; }
+        th { padding: 13px 26px; color: var(--muted); background: var(--surface); font-size: 11px; letter-spacing: 1.1px; text-transform: uppercase; font-weight: 600; text-align: left; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        th:first-child { width: 100px; }
+        th:last-child { width: 180px; text-align: right; }
+        td { padding: 22px 26px; border-bottom: 1px solid var(--border); }
+        tbody tr:last-child td { border-bottom: 0; }
+        .ranking-row:hover { background: var(--hover); }
+        .ranking-row.first { background: var(--tint); }
+        .rank { font-size: 18px; font-weight: 700; color: var(--muted); }
+        .medal { font-size: 25px; }
+        .username { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+        .first .username { color: var(--green); }
+        .rating { text-align: right; }
+        .rating-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.4px; }
+        .rating-label { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+        .empty { padding: 64px 24px; text-align: center; }
+        .empty-icon { display: inline-grid; place-items: center; width: 60px; height: 60px; background: var(--tint); color: var(--green); border: 1px solid var(--border); border-radius: 18px; font-size: 28px; }
+        .empty h2 { font-size: 22px; margin: 20px 0 10px; }
+        .empty p { color: var(--muted); line-height: 1.6; margin: 0; }
+        .footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; padding: 20px 2px; line-height: 1.6; }
+        .footer p { margin: 0; }
+        @media (max-width: 900px) {
+            .topbar { align-items: flex-start; flex-direction: column; }
+        }
+        @media (max-width: 600px) {
+            .container { width: calc(100% - 24px); margin-top: 12px; }
+            .topbar { padding: 20px; gap: 20px; }
+            .actions { width: 100%; gap: 8px; }
+            .actions a { flex: 1 1 auto; }
+            .header { padding: 30px 2px 24px; align-items: flex-start; flex-direction: column; gap: 18px; }
+            caption { padding: 20px 16px; }
+            th, td { padding: 16px 12px; }
+            th:first-child { width: 58px; }
+            th:last-child { width: 104px; }
+            .username { font-size: 14px; }
+            .rating-value { font-size: 17px; }
+            .medal { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+            <div><div class="brand-name">LeetCode Tracker</div><p>Small steps. Real progress.</p></div>
+        </div>
+        <nav class="actions" aria-label="Room navigation">
+            <a href="/logout" class="button">Log Out</a>
+            <a href="/create-room" class="button primary">Create Room</a>
+            <a href="/join-room" class="button">Join Room</a>
+            <button class="button theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">☀️</button>
+        </nav>
+    </header>
+
+    <section class="header" aria-labelledby="ranking-title">
+        <div>
+            <p class="eyebrow">Room leaderboard</p>
+            <h1 id="ranking-title">Contest Ranking</h1>
+            <p class="subtitle">Ranked by current LeetCode contest rating.</p>
+        </div>
+        <div class="ranking-label"><span aria-hidden="true">↗</span> Practice. Compete. Improve.</div>
+    </section>
+
+    <div class="ranking-card">
+        {% if ranking %}
+            <table>
+                <caption>A little friendly competition.</caption>
+                <thead><tr><th scope="col">Rank</th><th scope="col">Member</th><th scope="col">Rating</th></tr></thead>
+                <tbody>
+                {% for user in ranking %}
+                    <tr class="ranking-row{% if user.rank == 1 %} first{% endif %}">
+                        <td class="rank">
+                            {% if user.rank == 1 %}
+                                <span class="medal" role="img" aria-label="Rank 1">🥇</span>
+                            {% elif user.rank == 2 %}
+                                <span class="medal" role="img" aria-label="Rank 2">🥈</span>
+                            {% elif user.rank == 3 %}
+                                <span class="medal" role="img" aria-label="Rank 3">🥉</span>
+                            {% else %}
+                                #{{ user.rank }}
+                            {% endif %}
+                        </td>
+                        <td class="username">{{ user.username }}</td>
+                        <td class="rating">
+                            <span class="rating-value">{{ "%.2f"|format(user.rating) }}</span>
+                            <span class="rating-label">contest rating</span>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">
+                <span class="empty-icon" aria-hidden="true">♜</span>
+                <h2>A little competition starts here.</h2>
+                <p>No members in this room yet.</p>
+            </div>
+        {% endif %}
+    </div>
+    <footer class="footer"><p>Keep showing up. Every contest is a chance to grow.</p><p>LeetCode Tracker · Room rankings</p></footer>
+</main>
+<script>
+    const button = document.getElementById("theme-toggle");
+    button.addEventListener("click", function () {
+        const isLight = document.body.classList.toggle("light");
+        button.textContent = isLight ? "🌙" : "☀️";
+        button.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+        button.setAttribute("aria-pressed", String(isLight));
+    });
+</script>
+</body>
+</html>
