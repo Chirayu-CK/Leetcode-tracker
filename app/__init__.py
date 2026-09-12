@@ -71,10 +71,19 @@ def create_app():
     @app.route("/")
     def home():
         try:
+
+            print("HOME ROUTE")
+            print("LOGGED IN:", "user_id" in session)
+
+            if "user_id" in session:
+                print("Already logged in -> /profile")
+                return redirect("/profile")
+
             return render_template("home.html")
+
         except Exception as e:
             print("Home page error:", e)
-            return "Unable to load home page.", 500
+            return "Unable to load home page.", 500 return "Unable to load home page.", 500
 
 
 
@@ -148,29 +157,51 @@ def create_app():
 
     @app.route("/auth/callback")
     def auth_callback():
+
+        print("\n========== OAUTH CALLBACK HIT ==========")
+        print("FULL CALLBACK URL:", request.url)
+
         code = request.args.get("code")
 
+        print("CODE RECEIVED:", bool(code))
+
         if not code:
+            print("ERROR: No authorization code received")
             return "No authorization code received.", 400
 
         try:
+            # Exchange OAuth code for Supabase session
             response = supabase.auth.exchange_code_for_session({
                 "auth_code": code
             })
 
+            print("SESSION EXCHANGE SUCCESS:", bool(response.session))
+            print(
+                "USER:",
+                response.user.email if response.user else None
+            )
+
             if not response or not response.user or not response.session:
+                print("ERROR: Invalid authentication response")
                 return "Authentication failed. Invalid authentication response.", 400
 
             user = response.user
 
             if not user.id:
+                print("ERROR: User ID missing")
                 return "Authentication failed. User ID missing.", 400
 
+            # Store login information in Flask session
             session["user_id"] = user.id
             session["email"] = user.email
             session["access_token"] = response.session.access_token
             session["refresh_token"] = response.session.refresh_token
 
+            print("FLASK SESSION CREATED")
+            print("USER ID:", user.id)
+            print("EMAIL:", user.email)
+
+            # Check if profile already exists
             existing_profile = (
                 supabase
                 .table("profiles")
@@ -179,7 +210,15 @@ def create_app():
                 .execute()
             )
 
+            print("PROFILE FOUND:", bool(existing_profile.data))
+
+            # -----------------------------------------
+            # NEW USER
+            # -----------------------------------------
             if not existing_profile.data:
+
+                print("NEW USER - creating profile")
+
                 verification_key = secrets.token_urlsafe(12)
                 session["lee_verification_key"] = verification_key
 
@@ -188,10 +227,18 @@ def create_app():
                         "id": user.id,
                         "email": user.email
                     }).execute()
+
                 except Exception as e:
                     print("Profile creation error:", e)
                     session.clear()
-                    return "Unable to create your profile. Please try again.", 500
+
+                    return (
+                        "Unable to create your profile. "
+                        "Please try again.",
+                        500
+                    )
+
+                print("REDIRECTING NEW USER TO LEETCODE CONNECTION")
 
                 return render_template(
                     "connect_leetcode.html",
@@ -199,9 +246,21 @@ def create_app():
                     verification_key=verification_key
                 )
 
+            # -----------------------------------------
+            # EXISTING USER
+            # -----------------------------------------
             profile = existing_profile.data[0]
 
+            print(
+                "LEETCODE VERIFIED:",
+                profile.get("leetcode_verified")
+            )
+
+            # User exists but LeetCode is not verified
             if not profile.get("leetcode_verified"):
+
+                print("USER NEEDS LEETCODE VERIFICATION")
+
                 if "lee_verification_key" not in session:
                     verification_key = secrets.token_urlsafe(12)
                     session["lee_verification_key"] = verification_key
@@ -214,18 +273,33 @@ def create_app():
                     verification_key=verification_key
                 )
 
+            # Get linked LeetCode username
             username = profile.get("leetcode_username")
 
+            print("LEETCODE USERNAME:", username)
+
             if not username:
+                print("NO LEETCODE USERNAME - redirecting")
                 return redirect("/connect_leetcode")
+
+            # Everything is valid
+            print("LOGIN SUCCESSFUL")
+            print("REDIRECTING TO /profile")
 
             return redirect("/profile")
 
         except Exception as e:
-            print("Authentication error:", e)
-            session.clear()
-            return "Authentication failed. Please try logging in again.", 400
 
+            print("\n========== AUTHENTICATION ERROR ==========")
+            print("ERROR:", repr(e))
+
+            session.clear()
+
+            return (
+                "Authentication failed. "
+                "Please try logging in again.",
+                400
+            )
 
     
 
