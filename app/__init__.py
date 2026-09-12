@@ -71,19 +71,17 @@ def create_app():
     @app.route("/")
     def home():
         try:
-
-            print("HOME ROUTE")
-            print("LOGGED IN:", "user_id" in session)
+           
 
             if "user_id" in session:
-                print("Already logged in -> /profile")
+                
                 return redirect("/profile")
 
             return render_template("home.html")
 
         except Exception as e:
-            print("Home page error:", e)
-            return "Unable to load home page.", 500 return "Unable to load home page.", 500
+            
+            return "Unable to load home page.", 500
 
 
 
@@ -111,7 +109,7 @@ def create_app():
             return redirect(r.url)
 
         except Exception as e:
-            print("Login error:", e)
+            
             return "Unable to start login. Please try again.", 500
 
     @app.route("/logout")
@@ -122,7 +120,7 @@ def create_app():
             if sb is not None:
                 try:
                     sb.auth.sign_out()
-                    # print("Supabase logout successful.")
+                   
                 except Exception as e:
                     print("Supabase logout error:", e)
 
@@ -158,12 +156,9 @@ def create_app():
     @app.route("/auth/callback")
     def auth_callback():
 
-        print("\n========== OAUTH CALLBACK HIT ==========")
-        print("FULL CALLBACK URL:", request.url)
-
+      
         code = request.args.get("code")
 
-        print("CODE RECEIVED:", bool(code))
 
         if not code:
             print("ERROR: No authorization code received")
@@ -175,11 +170,7 @@ def create_app():
                 "auth_code": code
             })
 
-            print("SESSION EXCHANGE SUCCESS:", bool(response.session))
-            print(
-                "USER:",
-                response.user.email if response.user else None
-            )
+           
 
             if not response or not response.user or not response.session:
                 print("ERROR: Invalid authentication response")
@@ -188,7 +179,7 @@ def create_app():
             user = response.user
 
             if not user.id:
-                print("ERROR: User ID missing")
+                # print("ERROR: User ID missing")
                 return "Authentication failed. User ID missing.", 400
 
             # Store login information in Flask session
@@ -197,10 +188,7 @@ def create_app():
             session["access_token"] = response.session.access_token
             session["refresh_token"] = response.session.refresh_token
 
-            print("FLASK SESSION CREATED")
-            print("USER ID:", user.id)
-            print("EMAIL:", user.email)
-
+           
             # Check if profile already exists
             existing_profile = (
                 supabase
@@ -210,7 +198,7 @@ def create_app():
                 .execute()
             )
 
-            print("PROFILE FOUND:", bool(existing_profile.data))
+           
 
             # -----------------------------------------
             # NEW USER
@@ -251,15 +239,12 @@ def create_app():
             # -----------------------------------------
             profile = existing_profile.data[0]
 
-            print(
-                "LEETCODE VERIFIED:",
-                profile.get("leetcode_verified")
-            )
+           
 
             # User exists but LeetCode is not verified
             if not profile.get("leetcode_verified"):
 
-                print("USER NEEDS LEETCODE VERIFICATION")
+                
 
                 if "lee_verification_key" not in session:
                     verification_key = secrets.token_urlsafe(12)
@@ -276,23 +261,20 @@ def create_app():
             # Get linked LeetCode username
             username = profile.get("leetcode_username")
 
-            print("LEETCODE USERNAME:", username)
+           
 
             if not username:
-                print("NO LEETCODE USERNAME - redirecting")
+                
                 return redirect("/connect_leetcode")
 
             # Everything is valid
-            print("LOGIN SUCCESSFUL")
-            print("REDIRECTING TO /profile")
+          
 
             return redirect("/profile")
 
         except Exception as e:
 
-            print("\n========== AUTHENTICATION ERROR ==========")
-            print("ERROR:", repr(e))
-
+          
             session.clear()
 
             return (
